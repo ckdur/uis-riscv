@@ -26,7 +26,7 @@ def javacOptionsVersion(scalaVersion: String): Seq[String] = {
   }
 }
 
-name := "chisel-module-template"
+name := "uis-riscv"
 
 version := "3.1.1"
 
