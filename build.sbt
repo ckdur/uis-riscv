@@ -1,53 +1,34 @@
-// See README.md for license details.
+// Provide a managed dependency on X if -DXVersion="" is supplied on the command line ?
 
-def scalacOptionsVersion(scalaVersion: String): Seq[String] = {
-  Seq() ++ {
-    // If we're building with Scala > 2.11, enable the compile option
-    //  switch to support our anonymous Bundle definitions:
-    //  https://github.com/scala/bug/issues/10047
-    CrossVersion.partialVersion(scalaVersion) match {
-      case Some((2, scalaMajor: Long)) if scalaMajor < 12 => Seq()
-      case _ => Seq("-Xsource:2.11")
-    }
-  }
-}
+import sbt.complete._
+import sbt.complete.DefaultParsers._
+import xerial.sbt.pack._
+import sys.process._
 
-def javacOptionsVersion(scalaVersion: String): Seq[String] = {
-  Seq() ++ {
-    // Scala 2.12 requires Java 8. We continue to generate
-    //  Java 7 compatible code for Scala 2.11
-    //  for compatibility with old clients.
-    CrossVersion.partialVersion(scalaVersion) match {
-      case Some((2, scalaMajor: Long)) if scalaMajor < 12 =>
-        Seq("-source", "1.7", "-target", "1.7")
-      case _ =>
-        Seq("-source", "1.8", "-target", "1.8")
-    }
-  }
-}
+enablePlugins(PackPlugin)
 
-name := "uis-riscv"
-
-version := "3.1.1"
-
-scalaVersion := "2.11.12"
-
-crossScalaVersions := Seq("2.11.12", "2.12.4")
-
-resolvers ++= Seq(
-  Resolver.sonatypeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases")
+lazy val commonSettings = Seq(
+  organization := "uis",
+  version      := "0.1",
+  scalaVersion := "2.12.6",
+  parallelExecution in Global := false,
+  traceLevel   := 15,
+  scalacOptions ++= Seq("-deprecation","-unchecked","-Xsource:2.11"),
+  libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value),
+  libraryDependencies ++= Seq("org.json4s" %% "json4s-jackson" % "3.5.0"),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 
-// Provide a managed dependency on X if -DXVersion="" is supplied on the command line.
-val defaultVersions = Map(
-  "chisel3" -> "3.1.+",
-  "chisel-iotesters" -> "[1.2.5,1.3-SNAPSHOT["
-  )
+val uisriscvSettings = Seq(
+  organization := "uis",
+  version := "0.1",
+  name := "uis-riscv",
+  scalaVersion := "2.12.6",
+  scalacOptions ++= Seq("-deprecation","-unchecked","-Xsource:2.11"),
+  scalaSource in Compile := baseDirectory.value / "src",
+  mainClass in (Compile, run) := Some("generator.Main"),
+)
 
-libraryDependencies ++= Seq("chisel3","chisel-iotesters").map {
-  dep: String => "edu.berkeley.cs" %% dep % sys.props.getOrElse(dep + "Version", defaultVersions(dep)) }
-
-scalacOptions ++= scalacOptionsVersion(scalaVersion.value)
-
-javacOptions ++= javacOptionsVersion(scalaVersion.value)
+lazy val chisel = (project in file("chisel3")).settings(commonSettings)
+lazy val firrtl = (project in file("firrtl")).settings(commonSettings)
+lazy val root = (project in file(".")).settings(commonSettings, uisriscvSettings).dependsOn(chisel,firrtl)
