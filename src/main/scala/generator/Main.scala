@@ -3,10 +3,17 @@
 package generator
 
 import chisel3._
+import olinguitochip.config._
+import olinguitochip.platform.configs._
+import olinguitochip.chip._
 
 object Main extends App {
-  chisel3.Driver.execute(args, () => new gcd.Top(10))
-  chisel3.Driver.execute(args, () => new fibbonaci.dpath)
-  chisel3.Driver.execute(args, () => new fibbonaci.cpath)
-  //Driver.dumpFirrtl(() => new gcd.Top(10), Some(new File(td, s"test.fir"))
+  // Instance the configuration
+  val conf = (new TOPConfig).asInstanceOf[Config]
+  // Create Olinguito
+  chisel3.Driver.execute(args, () =>
+    new olinguitochip.platform.olinguito.Olinguito()(conf))
+  // Create the top
+  chisel3.Driver.execute(args, () =>
+    new olinguitochip.chip.TOPModule()(conf))
 }

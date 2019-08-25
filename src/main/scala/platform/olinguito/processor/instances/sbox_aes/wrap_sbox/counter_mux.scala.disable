@@ -1,0 +1,29 @@
+// See LICENSE for license details.
+
+package wrap.core
+
+import chisel3._
+import chisel3.util._
+
+
+
+
+
+
+class Counter extends Module {
+  val io = IO(new Bundle {
+    val RS = Input(UInt(32.W))
+    val Valid = Input(Bool())
+    val Ready = Output(Bool())
+    val SboxIn = Output(UInt(8.W))
+  })
+   val count = WireInit(0.U(2.W))
+   count := Counter.counter(io.Valid)
+   val sbin = WireInit(0.U(8.W))
+    when(count===0.U)      {sbin:=io.RS(7,0)}
+    .elsewhen(count===1.U) {sbin:=io.RS(15,8)}
+    .elsewhen(count===2.U) {sbin:=io.RS(23,16)}
+    .otherwise             {sbin:=io.RS(31,24)}
+   io.SboxIn := sbin
+   io.Ready  := Counter.ready_C(count)
+}
