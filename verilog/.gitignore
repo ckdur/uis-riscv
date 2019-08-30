@@ -1,0 +1,8 @@
+TOPModule.*
+*.o
+*.elf
+*.hex
+*.bin
+*.dump
+*.map
+
