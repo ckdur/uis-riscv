@@ -30,8 +30,6 @@ module Testbench();
     // Put the dump file
     $dumpfile("TOPModule.vcd"); // Waveform
     $dumpvars;
-    // Put the memory
-    $readmemh("boot.hex",dut.SysRAM.mem.mem_ext.ram);
     // We are not using interrupts. Deactivate them
     debug = 1'b0;
     mtip = 1'b0;
@@ -44,6 +42,12 @@ module Testbench();
     // Let the processor run 100000 ps then finish
     #100000;
     $finish;
+  end
+  
+  initial begin
+    #1;
+    // Put the memory
+    $readmemh("boot.hex",dut.SysRAM.mem.mem_ext.ram);
   end
 
 endmodule
